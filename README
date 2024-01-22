@@ -1,8 +1,18 @@
+Run Server:
 python3 manage.py runserver
 
-go to
+Correct URL to go to:
 localhost:8000/pytm_web/upload
 
-Docker Info
 
-docker run -it -p 8000:8000 nltm_tool
+
+Docker Info:
+
+run the docker image
+docker run -it -p 8000:8000 mrtoaf/nltm_tool
+
+single tag w/ latest
+docker build -t mrtoaf/nltm_tool:latest -t mrtoaf/nltm_tool:latest .
+
+multiple tags
+docker build -t mrtoaf/nltm_tool:latest -t mrtoaf/nltm_tool:latest .
