@@ -15,4 +15,4 @@ single tag w/ latest
 docker build -t mrtoaf/nltm_tool:latest -t mrtoaf/nltm_tool:latest .
 
 multiple tags
-docker build -t mrtoaf/nltm_tool:latest -t mrtoaf/nltm_tool:latest .
+docker build -t mrtoaf/nltm_tool:version-whatever -t mrtoaf/nltm_tool:latest .
