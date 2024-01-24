@@ -16,3 +16,6 @@ docker build -t mrtoaf/nltm_tool:latest -t mrtoaf/nltm_tool:latest .
 
 multiple tags
 docker build -t mrtoaf/nltm_tool:version-whatever -t mrtoaf/nltm_tool:latest .
+
+pushing
+docker push mrtoaf/nltm_tool:tagname
