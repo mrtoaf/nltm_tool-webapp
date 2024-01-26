@@ -1,22 +1,121 @@
 {% load static %}
 
-<b>My Threat Model</b>
-<br>
+<!DOCTYPE html>
+<b> This is a test page for random HTML stuff </b>
 
-<form onSubmit="displayImg()" id = "pytmForm" method = "post">
-{% csrf_token %}
-    <input type = "submit">
-</form>
+<div id="container"></div>
 
-<textarea rows="10" cols="80" id="textAreaInput" form = "pytmForm"></textarea> 
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-<div id="out_dfd" style="display:none"><img src="{% static 'out.png' %}"></div>
+// Declare the chart dimensions and margins.
+const width = 640;
+const height = 400;
+const marginTop = 20;
+const marginRight = 20;
+const marginBottom = 30;
+const marginLeft = 40;
 
-<script>
-function displayImg() {
-    alert(document.getElementById("textAreaInput").value)
-    document.getElementById("out_dfd").style.display = "inline"
-}
+// Create the SVG container.
+const svg = d3.create("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// Define the circle variables
+  const boxHeight = 200;
+  const circleX = 100;
+  const circleY = boxHeight / 2;
+  const radius = 40;
+
+  // Define the line variables
+  const lineLength = 100;
+  const lineStart1 = [circleX + radius, circleY - 8];
+  const lineEnd1 = [lineStart1[0] + lineLength, circleY - 8];
+  const lineStart2 = [circleX + radius + 10, circleY + 8];
+  const lineEnd2 = [lineStart2[0] + lineLength, circleY + 8];
+
+  // Define the arrowhead marker variables
+  const markerBoxWidth = 20;
+  const markerBoxHeight = 20;
+  const refX = markerBoxWidth / 2;
+  const refY = markerBoxHeight / 2;
+  const markerWidth = markerBoxWidth / 2;
+  const markerHeight = markerBoxHeight / 2;
+  const arrowPoints = [[0, 0], [0, 20], [20, 10]];
+
+  svg
+    .append('defs')
+    .append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', [0, 0, markerBoxWidth, markerBoxHeight])
+    .attr('refX', refX)
+    .attr('refY', refY)
+    .attr('markerWidth', markerBoxWidth)
+    .attr('markerHeight', markerBoxHeight)
+    .attr('orient', 'auto-start-reverse')
+    .append('path')
+    .attr('d', d3.line()(arrowPoints))
+    .attr('stroke', 'black');
+
+  // Add the first circle
+  svg
+    .append('circle')
+    .attr('cx', circleX)
+    .attr('cy', circleY)
+    .attr('r', radius)
+    .style('fill', 'white')
+    .style('stroke', 'black');
+
+  // Add first text
+  svg
+    .append('text')
+    .attr('text-anchor', 'middle')
+    .attr('alignment-baseline', 'central')
+    .attr('x', circleX)
+    .attr('y', circleY)
+    .attr('fill', 'red')
+    .style("font-size", 19)
+    .text("server");
+
+  // Add the line with arrowhead at the end
+  svg
+    .append('path')
+    .attr('d', d3.line()([lineStart1, lineEnd1]))
+    .attr('stroke', 'black')
+    .attr('marker-end', 'url(#arrow)')
+    .attr('fill', 'none');
+
+  // but what if... 2nd line (gasp)
+  svg
+    .append('path')
+    .attr('d', d3.line()([lineEnd2, lineStart2]))
+    .attr('stroke', 'black')
+    .attr('marker-end', 'url(#arrow)')
+    .attr('fill', 'none');
+
+  // Add the second circle
+  svg
+    .append('rect')
+    .attr('x', lineEnd1[0] + markerWidth)
+    .attr('y', circleY - radius)
+    .attr('width', radius*2)
+    .attr('height', radius*2)
+    .style('fill', 'white')
+    .style('stroke', 'black');
+
+  // Add second text
+  svg
+    .append('text')
+    .attr('text-anchor', 'middle')
+    .attr('alignment-baseline', 'central')
+    .attr('x', lineEnd1[0] + markerWidth + radius)
+    .attr('y', circleY)
+    .attr('fill', 'blue')
+    .style("font-size", 19)
+    .text("client");
+
+
+  // Append the SVG element.
+  container.append(svg.node());
 
 </script>
-
