@@ -1,0 +1,40 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'pytm_web.css' %}">
+
+
+<div id = 'menuBar'>
+    <h2>Threat Modeling Tool</h2>
+    <div class="topnav">
+        <a href="#share">Share</a>
+        <a href="#export">Export</a>
+        <a href="#profile">Profile</a>
+    </div>
+</div>
+
+<div class="lowerArea">
+    <div class="modeBar">
+        <img src="{% static 'assets.png' %}" width="75%" style="padding-bottom: 10px;" onclick= "boldHeading('assets')">
+        <img src="{% static 'warnings.png' %}" width="75%" style="padding-bottom: 10px;" onclick="boldHeading('threats')">
+        <img src="{% static 'wrench.png' %}" width="75%" style="padding-bottom: 10px;"  onclick="boldHeading('controls')">
+        <img src="{% static 'magnify.png' %}" width="75%" style="padding-bottom: 10px;" onclick="boldHeading('recs')">
+    </div>
+    <div class="itemsBar">
+        <h3 id = "assets" >What are we working on?</h3>
+        <h3 id = "threats" style="display: none;" >What could go wrong?</h3>
+        <h3 id = "controls" style="display: none;" >What are we working?</h3>
+        <h3 id = "recs" style="display: none;" >Did we do a good enough job?</h3>
+    </div>
+    <img class = "dfd_assetview" id="dfd_img" src="{% static 'out.png' %}" style = "display:inline">
+  </div>
+
+  <script>
+    function boldHeading(icon) {
+        var h3s = document.querySelectorAll("h3");
+        h3s.forEach(header => {
+            header.style.display = "none";
+        });
+        document.getElementById(icon).style.display = "block";
+    }
+
+  </script>
