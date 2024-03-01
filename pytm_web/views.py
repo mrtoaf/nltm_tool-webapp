@@ -6,9 +6,9 @@ import os
 import subprocess
 
 # base editor view
-def editor(request):
+def test(request):
     # generate() # generate random color cat picture
-    return render(request, "pytm_web/editor.html")
+    return render(request, "pytm_web/test.html")
 
 # view for uploading file
 def upload_file(request):
@@ -47,14 +47,17 @@ def upload_file(request):
             # os.remove(os.path.join(DIR, 'static', 'out.png'))
 
             # then render the new page
-            return render(request, 'pytm_web/upload.html', {'fileform': fileform})
+            return render(request, 'pytm_web/dfd_viewer.html', {'fileform': fileform})
 
     else:
             # if request method is not POST, make an empty form
         fileform = UploadDFDFileForm()
             # renders template upload.html, passing in the form
             # NEED TO IMPLEMENT upload.html TEMPLATE
-    return render(request, 'pytm_web/upload.html', {'fileform': fileform})
+    return render(request, 'pytm_web/dfd_viewer.html', {'fileform': fileform})
+
+def asset_viewer(request):
+    return render(request, "pytm_web/asset_viewer.html")
 
 ################################################################################
 
