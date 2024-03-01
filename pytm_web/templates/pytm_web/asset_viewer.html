@@ -14,27 +14,195 @@
 
 <div class="lowerArea">
     <div class="modeBar">
-        <img src="{% static 'assets.png' %}" width="75%" style="padding-bottom: 10px;" onclick= "boldHeading('assets')">
-        <img src="{% static 'warnings.png' %}" width="75%" style="padding-bottom: 10px;" onclick="boldHeading('threats')">
-        <img src="{% static 'wrench.png' %}" width="75%" style="padding-bottom: 10px;"  onclick="boldHeading('controls')">
-        <img src="{% static 'magnify.png' %}" width="75%" style="padding-bottom: 10px;" onclick="boldHeading('recs')">
+        <img src="{% static 'assets.png' %}" width="75%" style="padding-bottom: 10px;" onclick= "showSection('assets')">
+        <img src="{% static 'warnings.png' %}" width="75%" style="padding-bottom: 10px;" onclick="showSection('threats')">
+        <img src="{% static 'wrench.png' %}" width="75%" style="padding-bottom: 10px;"  onclick="showSection('controls')">
+        <img src="{% static 'magnify.png' %}" width="75%" style="padding-bottom: 10px;" onclick="showSection('recs')">
     </div>
-    <div class="itemsBar">
-        <h3 id = "assets" >What are we working on?</h3>
-        <h3 id = "threats" style="display: none;" >What could go wrong?</h3>
-        <h3 id = "controls" style="display: none;" >What are we working?</h3>
-        <h3 id = "recs" style="display: none;" >Did we do a good enough job?</h3>
+    <div id="itemsBar" class="itemsBar">
+        <div id="assets" class="items">
+            <b>What are we working on?</b>
+            <br>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Actor</button>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Server</button>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Data Store</button>
+            <br>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Lambda</button>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Process</button>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">External Entity</button>
+            <br>
+            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Trust Boundry</button>
+        </div>
+        <div id="threats" class="items" style="display: none;" >
+            <b>What could go wrong?</b>
+        </div>
+        <div id="controls" class="items" style="display: none;" >
+            <b>What are we doing about it?</b>
+        </div>
+        <div id="recs" class="items" style="display: none;" >
+            <b>Did we do a good enough job?</b>
+        </div>
     </div>
-    <img class = "dfd_assetview" id="dfd_img" src="{% static 'out.png' %}" style = "display:inline">
-  </div>
+    <!-- <img class= "dfd_assetview" id="dfd_img" src="{% static 'out.png' %}" style= "display:inline"> -->
+    <div class="dfd_assetview" id = "dfd">
+        
+    </div>
+</div>
 
-  <script>
-    function boldHeading(icon) {
-        var h3s = document.querySelectorAll("h3");
-        h3s.forEach(header => {
-            header.style.display = "none";
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+    
+    window.onload = function() {
+        const svg = d3.create("svg")
+        .attr("width", 500)
+        .attr("height", 500)
+        .attr("id", "dfd_svg");
+
+        dfd.append(svg.node());
+    }
+    
+    function showSection(icon) {
+        var divs = document.querySelectorAll('.items');
+        divs.forEach(div => {
+            div.style.display = "none";
         });
         document.getElementById(icon).style.display = "block";
     }
 
-  </script>
+    function addActor(name) {
+        var asset_text = window.prompt("Name this object:", "New " + name);
+        if (asset_text == null)
+            return;
+
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        
+        // for demo purposes, this line clears the entire svg every time a
+        // new element is added
+        // TODO: figure out how to automatically move/space out elements
+        d3.selectAll("svg > *").remove();
+        
+        switch (name) {
+            case "Actor":
+                svg
+                .append('rect')
+                .attr('class', 'asset')
+                .attr('x', 100-30)
+                .attr('y', 100-30)
+                .attr('width', 60)
+                .attr('height', 60)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+                break;
+            case "Server":
+                svg
+                .append('rect')
+                .attr('class', 'asset')
+                .attr('x', 100-30)
+                .attr('y', 100-30)
+                .attr('width', 60)
+                .attr('height', 60)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+                break;
+            case "Data Store":
+                const ellipseHeight = 150
+                const ellipseWidth = 100
+                const radX = 60;
+                const radY = 15
+                const lineStart = [ellipseWidth - radX, ellipseWidth];
+                const lineEnd = [ellipseWidth - radX, ellipseHeight];
+                svg
+                .append('ellipse')
+                .attr('class', 'asset')
+                .attr('cx', ellipseWidth)
+                .attr('cy', ellipseWidth)
+                .attr('rx', radX)
+                .attr('ry', radY)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+
+                svg
+                .append('ellipse')
+                .attr('class', 'asset')
+                .attr('cx', ellipseWidth)
+                .attr('cy', ellipseHeight)
+                .attr('rx', radX)
+                .attr('ry', radY)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+
+                svg
+                .append('path')
+                .attr('d', d3.line()([lineStart, lineEnd]))
+                .attr('stroke', 'black')
+                .attr('fill', 'none');
+
+                svg
+                .append('path')
+                .attr('d', d3.line()([[ellipseWidth + radX, ellipseWidth], [ellipseWidth + radX, ellipseHeight]]))
+                .attr('stroke', 'black')
+                .attr('fill', 'none');
+                break;
+            case "Process":
+                svg
+                .append('circle')
+                .attr('class', 'asset')
+                .attr('cx', 100)
+                .attr('cy', 100)
+                .attr('r', 30)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+                break;
+            case "External Entity":
+                svg
+                .append('rect')
+                .attr('class', 'asset')
+                .attr('x', 100-30)
+                .attr('y', 100-30)
+                .attr('width', 60)
+                .attr('height', 60)
+                .style('fill', 'white')
+                .style('stroke', 'black');
+                break;
+            case "Lambda":
+                svg
+                .append('text')
+                .attr('class', 'asset_text')
+                .attr('x', 100)
+                .attr('y', 100)
+                .attr('fill', 'black')
+                .style("font-size", 100)
+                .style('font-family', 'Calibri')
+                .text('λ');
+                break;
+            case "Trust Boundry":
+                svg
+                .append('rect')
+                .attr('class', 'asset')
+                .attr('x', 100-30)
+                .attr('y', 100-30)
+                .attr('width', 60)
+                .attr('height', 60)
+                .style('fill', 'white')
+                .attr('stroke-dasharray','5,3')
+                .style('stroke', 'black');
+                break;
+            default:
+                console.log("ERROR: addActor() got name " + name + ", which isn't recognized as a shape");
+                break;
+        }
+
+        svg
+        .append('text')
+        .attr('class', 'asset_text')
+        .attr('x', 100)
+        .attr('y', 100)
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'central') // why doesn't this work on Firefox???
+        .attr('fill', 'black')
+        .style("font-size", 19)
+        .text(asset_text);
+
+    }
+
+</script>

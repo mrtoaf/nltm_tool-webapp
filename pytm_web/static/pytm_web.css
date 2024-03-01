@@ -116,5 +116,27 @@ h3 {
 }
 
 .dfd_assetview {
-    padding-left: 10%;
+    /* padding-left: 10%; */
+}
+
+.items {
+    padding-left: 10px;
+    padding-top: 10px;
+}
+
+.assetButton {
+    height: 60px;
+    width: 30%;
+    background-color: white;
+    border-radius: 5px; 
+    /* padding: 10px; */
+
+}
+
+.asset {
+    text-align: center;
+}
+
+.asset_text {
+    vertical-align: middle;
 }
