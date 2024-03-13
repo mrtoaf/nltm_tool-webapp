@@ -1,6 +1,7 @@
 {% load static %}
 
 <!doctype html>
+<title>NLTM Asset Viewer</title>
 <link rel="stylesheet" href="{% static 'pytm_web.css' %}">
 
 
@@ -24,15 +25,20 @@
         <div id="assets" class="items">
             <b>What are we working on?</b>
             <br>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Actor</button>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Server</button>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Data Store</button>
+            Assets
             <br>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Lambda</button>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Process</button>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">External Entity</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Actor</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Server</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Data Store</button>
             <br>
-            <button type="button" class="assetButton" onclick="addActor(this.innerHTML)">Trust Boundry</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Lambda</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Process</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">External Entity</button>
+            <br>
+            Flows and Groups
+            <br>
+            <button type="button" class="assetButton" onclick="addDataFlow(this.innerHTML)">Data Flow</button>
+            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Trust Boundry</button>
         </div>
         <div id="threats" class="items" style="display: none;" >
             <b>What could go wrong?</b>
@@ -52,10 +58,16 @@
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
+    // Static variables
+    // TODO probably don't do this
     var nodes = [];
+    var links = [];
+    var arrows = [];
     var node_count = 0;
+    var select_count = 0;
     var area;
 
+    // Create an SVG on page load
     window.onload = function() {
         area = d3.select('.dfd_assetview').node().getBoundingClientRect()
 
@@ -67,6 +79,8 @@
         dfd.append(svg.node());
     }
 
+    // On window resize, run the force simulation again
+    // so that elements don't ever get stuck off screen
     window.onresize = function() {
         area = d3.select('.dfd_assetview').node().getBoundingClientRect()
         
@@ -78,6 +92,8 @@
         run_simulation();
     }
     
+    // Toggles between the four question sections (What are we working on?, etc.)
+    // Determines which one should be displayed.
     function showSection(icon) {
         var divs = document.querySelectorAll('.items');
         divs.forEach(div => {
@@ -86,22 +102,32 @@
         document.getElementById(icon).style.display = "block";
     }
 
-    function addActor(name) {
+    // When an Asset button is clicked, this is the function that tells d3
+    // how to draw a new group to represent that object and add it to the svg.
+    function addElement(name) {
+        
+        // Prompt user to name their element
         var asset_text = window.prompt("Name this object:", "New " + name);
         if (asset_text == null)
             return;
 
         const svg = d3.select(document.getElementById("dfd")).select("svg");
         
+        
+        // NOTE: this variable is used in the switch statement below to alter
+        // the starting position of various shapes. HOWEVER, this only moves the
+        // shape relative to its parent group, not relative to the whole canvas.
+        // Also, I don't think this is changed anywhere.
+        // TODO: maybe just make this a hardcoded 0 in the switch statement 
+        // wherever it is used?
         var start = 0;
-        // NOTE: this only alters where the elements are starting **relative
-        // to their group object**. if you want to alter where the group
-        // itself actually starts, that's lower down in the simulation
-        // where nodes are defi
-
+        
+         // Create a group svg element containing the Asset shape(s) and label text
         var elem_group = svg
             .append('g')
         
+        // This switch statement determines which Asset was clicked on
+        // and draws the corresponding shape(s).
         switch (name) {
             case "Actor":
                 elem_group
@@ -115,7 +141,7 @@
                 .style('stroke', 'black');
                 break;
             case "Server":
-            elem_group
+                elem_group
                 .append('rect')
                 .attr('class', 'asset')
                 .attr('x', start)
@@ -171,7 +197,7 @@
                 .style('stroke', 'black');
                 break;
             case "External Entity":
-            elem_group
+                elem_group
                 .append('rect')
                 .attr('class', 'asset')
                 .attr('x', start)
@@ -182,18 +208,19 @@
                 .style('stroke', 'black');
                 break;
             case "Lambda":
-            elem_group
+                elem_group
                 .append('text')
-                .attr('class', 'asset_text')
+                .attr('class', 'asset')
                 .attr('x', start)
                 .attr('y', start)
-                .attr('fill', 'black')
+                .attr('fill', 'white')
+                .style('stroke', 'black')
                 .style("font-size", '100pt')
                 .style('font-family', 'Calibri')
                 .text('λ');
                 break;
             case "Trust Boundry":
-            elem_group
+                elem_group
                 .append('rect')
                 .attr('class', 'asset')
                 .attr('x', start)
@@ -205,28 +232,70 @@
                 .style('stroke', 'black');
                 break;
             default:
-                console.log("ERROR: addActor() got name " + name + ", which isn't recognized as a shape");
+                // should never happen
+                console.log("ERROR: addElement() got name " + name + ", which isn't recognized as a shape");
                 break;
         }
-
+        
+        // Now we add a label to our generated Asset.
         elem_group
         .append('text')
         .attr('class', 'asset_text')
         .attr('x', start + 15)
         .attr('y', start + 15)
         .attr('text-anchor', 'middle')
-        .attr('alignment-baseline', 'central') // why doesn't this work on Firefox???
+        .attr('alignment-baseline', 'central')
         .attr('fill', 'black')
         .style("font-size", '16pt')
         .text(asset_text);
+
+        // We add a listener to the Asset so that it highlights on click
+        // Holding Shift allows multiple selections
+        // BUG: Datum is sometimes overwritten during force simulation,
+        // causing shift highlighting to fail?? (see line 322)
+        elem_group.datum({selected: 0})
+        elem_group.on('click', function (e) {
+            if (e.shiftKey) {
+                select_count++;
+                elem_group.datum({selected: select_count})
+                // console.log("elem_group.datum() = ")
+                // console.log(elem_group.datum())
+            } else {
+                select_count = 1
+                d3.selectAll('g').datum({selected: 0})
+                elem_group.datum({selected: select_count})
+                // console.log("elem_group.datum() = ")
+                // console.log(elem_group.datum())
+            }
+            
+            svg.selectAll('g').each(function (d, i) {
+                // console.log(this)
+                // console.log("group " + i.toString() + " has datum = ")
+                // console.log(d)
+                if (d.selected > 0) {
+                    d3.select(this).selectAll('.asset').style('stroke', 'blue')
+                    d3.select(this).selectAll('.asset').style('stroke-width', 5)
+                } else {
+                    d3.select(this).selectAll('.asset').style('stroke', 'black')
+                    d3.select(this).selectAll('.asset').style('stroke-width', 1)
+                }
+        
+            })
+        })
 
         node_count++;
 
         run_simulation();
     }
 
+    // Tells d3 to actually run the force simulation.
+    // Applies a physics force to each Asset to repel each other,
+    // as well as to attract towards the center.
+    // Called whenever an Asset is added or whenever the screen is resized.
     function run_simulation() {
         nodes = [];
+
+        // Builds a nodes list based on how many existing Assets there are
         for (let i = 0; i < node_count; i++) {
             let rand_x = Math.random()*area.width/2;
             let rand_y = Math.random()*area.height/2;
@@ -236,20 +305,23 @@
                 'y': area.height/4 + rand_y
             })
         }
-        // TODO: can we make this not random actually??
 
+        // Tells d3 how to handle forces
         d3.forceSimulation(nodes)
         .force('x', d3.forceX(area.width / 2))
         .force('y', d3.forceY(area.height / 2))
-        // .force('center', d3.forceCenter(area.width / 2, area.height / 2))
+        .force('link', d3.forceLink(links))
         .force('collide', d3.forceCollide().radius(100))
             .on('tick', ticked);
     }
     
+    // Tells elements how to move on each frame of the forceSimulation
     function ticked() {
         var u = d3.select('svg')
         .selectAll('g')
-        .data(nodes);
+        .data(nodes); // NOTE: something weird about how this data() call might be
+        // overwriting the datum() call we're trying to use to show which element(s)
+        // are selected. why is this happening???
 
         u.attr("transform", function(d) {
             return "translate("+[
@@ -257,6 +329,48 @@
                 d.y
             ]+")"
         });
+    
+        // An attempt to update lines that are added by the Data Flow button
+        // BUG: causes type error after other assts are added
+        // Seems very very broken
+        arrows.forEach(arrow => {
+            arrow
+            .append('path')
+            .attr('d', d3.line()([[arrow.source.x, arrow.source.y], [arrow.target.x, arrow.target.y]]))
+        });
     }
 
+    // Attempt at creating data flows between Assets
+    // Doesn't actually create dynamic arrows yet,
+    // just puts a static line on screen
+    // Very bugged!
+    function addDataFlow() {
+        let first_index = 0;
+        let second_index = 0;
+
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        svg.selectAll('g').each(function (d, i) {
+            if (d.selected == 1) {
+                first_index = i;
+            } else if (d.selected == 2) {
+                second_index = i;
+            }
+        })
+        
+        let link = {"source": first_index, "target": second_index};
+        links.push(link);
+
+        const arrow = svg
+        .append('path')
+        .attr('d', d3.line()([[100, 100], [200, 200]]))
+        .attr('stroke', 'black')
+        .attr('marker-end', 'url(#arrow)')
+        .attr('fill', 'none')
+        .datum(link);
+        
+        arrows.push(arrow);
+
+        console.log(links);
+        console.log(arrows);
+    }
 </script>
