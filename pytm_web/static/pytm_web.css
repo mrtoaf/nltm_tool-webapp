@@ -135,8 +135,13 @@ h3 {
     width: 30%;
     background-color: white;
     border-radius: 5px; 
-    /* padding: 10px; */
+}
 
+.dataflowButton {
+    height: 30px;
+    width: 80%;
+    background-color: white;
+    border-radius: 5px; 
 }
 
 .asset {
