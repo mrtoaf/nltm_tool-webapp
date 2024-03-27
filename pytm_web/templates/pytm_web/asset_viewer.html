@@ -104,24 +104,6 @@
 
         run_simulation();
     }
-
-    function update_dropdowns() {
-        let select_source = document.getElementById('source_dropdown');
-        let select_target = document.getElementById('target_dropdown');
-        select_source.disabled = false;
-        select_target.disabled = false;
-
-        while (select_source.options.length > 0) {
-            select_source.remove(0);
-            select_target.remove(0);
-        }
-        
-        const svg = d3.select(document.getElementById("dfd")).select("svg");
-        svg.selectAll('.asset_text').each(function (d, i) {            
-            select_source.add(new Option(d3.select(this).text()));
-            select_target.add(new Option(d3.select(this).text()));
-        })
-    }
     
     // Toggles between the four question sections (What are we working on?, etc.)
     // Determines which one should be displayed.
@@ -306,7 +288,17 @@
             })
         }
 
+        // NOTE: need to update nodes list at this step so that the
+        // following update_dropdowns() can access the data
+        d3.select('svg')
+        .selectAll('g')
+        .data(nodes);
+
         // (Attempt to) build a links list, to link each of the nodes to each other
+        // FIXME: This code should eventually be removed in place of the
+        // updates to links done by addDataFlow().
+        // But for some reason, these links work, but the addDataFlow() ones don't?
+        // TODO figure out why and fix it
         for (let i = 0; i < node_count; i++) {
             for (let j = 0; j < node_count; j++) {
                 if (i != j) {
@@ -319,6 +311,9 @@
                 }
             }
         }
+        
+        // DEBUG: Log the links list.
+        console.log(links);
         
         const svg = d3.select(document.getElementById("dfd")).select("svg");
         const link = svg.selectAll(".links")
@@ -344,6 +339,32 @@
         .force('link', d3.forceLink(links))
         .force('collide', d3.forceCollide().radius(100))
             .on('tick', ticked);
+    }
+
+    // Clears the dropdown lists, then regenerates them
+    // with the names of every existing element
+    function update_dropdowns() {
+        let select_source = document.getElementById('source_dropdown');
+        let select_target = document.getElementById('target_dropdown');
+        select_source.disabled = false;
+        select_target.disabled = false;
+
+        while (select_source.options.length > 0) {
+            select_source.remove(0);
+            select_target.remove(0);
+        }
+        
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        svg.selectAll('.asset_text').each(function (d, i) {
+            select_source.add(new Option(
+                d3.select(this).text(),
+                d3.select(this.parentNode).data()[0].id
+            ));
+            select_target.add(new Option(
+                d3.select(this).text(),
+                d3.select(this.parentNode).data()[0].id
+            ));
+        })
     }
     
     // Tells elements how to move on each frame of the forceSimulation
@@ -377,7 +398,8 @@
         edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
     }
 
-    // DEBUG
+    // Adds a dataflow line between two chosen elements.
+    // FIXME: Currently not working!
     function addDataFlow() {
         let select_source = document.getElementById('source_dropdown');
         let select_target = document.getElementById('target_dropdown');
@@ -390,13 +412,13 @@
             return;
         }
 
-        // let link = {
-        //     'source': ,
-        //     'target': ,
-        //     'type': "Test -->",
-        //     'distance': 30
-        // }
+        let link = {
+            'source': parseInt(source),
+            'target': parseInt(target),
+            'type': "Test -->",
+            'distance': 30
+        }
 
-        // links.append(link);
+        links.push(link); // FIXME: D3 does not like this
     }
 </script>
