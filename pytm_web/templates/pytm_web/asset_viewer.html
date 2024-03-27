@@ -25,7 +25,7 @@
         <div id="assets" class="items">
             <b>What are we working on?</b>
             <br>
-            Assets
+            Add Assets
             <br>
             <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Actor</button>
             <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Server</button>
@@ -35,10 +35,24 @@
             <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Process</button>
             <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">External Entity</button>
             <br>
-            Flows and Groups
             <br>
-            <button type="button" class="assetButton" onclick="addDataFlow(this.innerHTML)">Data Flow</button>
-            <button type="button" class="assetButton" onclick="addElement(this.innerHTML)">Trust Boundry</button>
+            Add Dataflow
+            <br>
+
+            <label for="source_dropdown">Source:</label>
+            <select name="source_dropdown" id="source_dropdown" disabled>
+                <option value="invalid">Add an asset first!</option>
+            </select>
+
+            <br>
+
+            <label for="target_dropdown">Target:</label>
+            <select name="target_dropdown" id="target_dropdown" disabled>
+                <option value="invalid">Add an asset first!</option>
+            </select>
+
+            <br>
+            <button type="button" class="dataflowButton" onclick="addDataFlow(this.innerHTML)">Add Data Flow</button>
         </div>
         <div id="threats" class="items" style="display: none;" >
             <b>What could go wrong?</b>
@@ -62,7 +76,6 @@
     // TODO probably don't do this
     var nodes = [];
     var links = [];
-    var arrows = [];
     var node_count = 0;
     var select_count = 0;
     var area;
@@ -90,6 +103,24 @@
         .attr("height", area.height)
 
         run_simulation();
+    }
+
+    function update_dropdowns() {
+        let select_source = document.getElementById('source_dropdown');
+        let select_target = document.getElementById('target_dropdown');
+        select_source.disabled = false;
+        select_target.disabled = false;
+
+        while (select_source.options.length > 0) {
+            select_source.remove(0);
+            select_target.remove(0);
+        }
+        
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        svg.selectAll('.asset_text').each(function (d, i) {            
+            select_source.add(new Option(d3.select(this).text()));
+            select_target.add(new Option(d3.select(this).text()));
+        })
     }
     
     // Toggles between the four question sections (What are we working on?, etc.)
@@ -249,43 +280,10 @@
         .style("font-size", '16pt')
         .text(asset_text);
 
-        // We add a listener to the Asset so that it highlights on click
-        // Holding Shift allows multiple selections
-        // BUG: Datum is sometimes overwritten during force simulation,
-        // causing shift highlighting to fail?? (see line 322)
-        elem_group.datum({selected: 0})
-        elem_group.on('click', function (e) {
-            if (e.shiftKey) {
-                select_count++;
-                elem_group.datum({selected: select_count})
-                // console.log("elem_group.datum() = ")
-                // console.log(elem_group.datum())
-            } else {
-                select_count = 1
-                d3.selectAll('g').datum({selected: 0})
-                elem_group.datum({selected: select_count})
-                // console.log("elem_group.datum() = ")
-                // console.log(elem_group.datum())
-            }
-            
-            svg.selectAll('g').each(function (d, i) {
-                // console.log(this)
-                // console.log("group " + i.toString() + " has datum = ")
-                // console.log(d)
-                if (d.selected > 0) {
-                    d3.select(this).selectAll('.asset').style('stroke', 'blue')
-                    d3.select(this).selectAll('.asset').style('stroke-width', 5)
-                } else {
-                    d3.select(this).selectAll('.asset').style('stroke', 'black')
-                    d3.select(this).selectAll('.asset').style('stroke-width', 1)
-                }
-        
-            })
-        })
-
         node_count++;
 
         run_simulation();
+        update_dropdowns();
     }
 
     // Tells d3 to actually run the force simulation.
@@ -294,6 +292,7 @@
     // Called whenever an Asset is added or whenever the screen is resized.
     function run_simulation() {
         nodes = [];
+        links = [];
 
         // Builds a nodes list based on how many existing Assets there are
         for (let i = 0; i < node_count; i++) {
@@ -301,11 +300,43 @@
             let rand_y = Math.random()*area.height/2;
 
             nodes.push({
+                'id': i,
                 'x': area.width/4 + rand_x,
                 'y': area.height/4 + rand_y
             })
         }
 
+        // (Attempt to) build a links list, to link each of the nodes to each other
+        for (let i = 0; i < node_count; i++) {
+            for (let j = 0; j < node_count; j++) {
+                if (i != j) {
+                    links.push({
+                        'source': i,
+                        'target': j,
+                        'type': "Test -->",
+                        'distance': 30
+                    })
+                }
+            }
+        }
+        
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        const link = svg.selectAll(".links")
+        .data(links)
+        .enter()
+        .append("line")
+        .attr("class", "links")
+
+        var edgepaths = svg.selectAll(".edgepath")
+        .data(links)
+        .enter()
+        .append('path')
+        .attr('class', 'edgepath')
+        .attr('fill', 'black')
+        .attr('stroke', 'black')
+        .attr('id', function (d, i) {return 'edgepath' + i})
+        .style("pointer-events", "none");
+        
         // Tells d3 how to handle forces
         d3.forceSimulation(nodes)
         .force('x', d3.forceX(area.width / 2))
@@ -317,6 +348,19 @@
     
     // Tells elements how to move on each frame of the forceSimulation
     function ticked() {
+        const svg = d3.select(document.getElementById("dfd")).select("svg");
+        let link = svg.selectAll(".links")
+        let edgepaths = svg.selectAll(".edgepath")
+        // Pasted code from online
+        // Please work? :pray:
+        link.attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+        // Even more pasted code from online
+        // Please work???? :pray:
+        
         var u = d3.select('svg')
         .selectAll('g')
         .data(nodes); // NOTE: something weird about how this data() call might be
@@ -329,48 +373,30 @@
                 d.y
             ]+")"
         });
-    
-        // An attempt to update lines that are added by the Data Flow button
-        // BUG: causes type error after other assts are added
-        // Seems very very broken
-        arrows.forEach(arrow => {
-            arrow
-            .append('path')
-            .attr('d', d3.line()([[arrow.source.x, arrow.source.y], [arrow.target.x, arrow.target.y]]))
-        });
+
+        edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
     }
 
-    // Attempt at creating data flows between Assets
-    // Doesn't actually create dynamic arrows yet,
-    // just puts a static line on screen
-    // Very bugged!
+    // DEBUG
     function addDataFlow() {
-        let first_index = 0;
-        let second_index = 0;
+        let select_source = document.getElementById('source_dropdown');
+        let select_target = document.getElementById('target_dropdown');
+        let source = select_source.value;
+        let target = select_target.value;
 
-        const svg = d3.select(document.getElementById("dfd")).select("svg");
-        svg.selectAll('g').each(function (d, i) {
-            if (d.selected == 1) {
-                first_index = i;
-            } else if (d.selected == 2) {
-                second_index = i;
-            }
-        })
-        
-        let link = {"source": first_index, "target": second_index};
-        links.push(link);
+        // TODO check with Ron -- should you be able to make a dataflow from something to itself??
+        if (source === target) {
+            alert("Cannot add a dataflow with identical source and target!");
+            return;
+        }
 
-        const arrow = svg
-        .append('path')
-        .attr('d', d3.line()([[100, 100], [200, 200]]))
-        .attr('stroke', 'black')
-        .attr('marker-end', 'url(#arrow)')
-        .attr('fill', 'none')
-        .datum(link);
-        
-        arrows.push(arrow);
+        // let link = {
+        //     'source': ,
+        //     'target': ,
+        //     'type': "Test -->",
+        //     'distance': 30
+        // }
 
-        console.log(links);
-        console.log(arrows);
+        // links.append(link);
     }
 </script>
