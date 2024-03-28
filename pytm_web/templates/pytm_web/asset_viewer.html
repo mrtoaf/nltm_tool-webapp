@@ -246,7 +246,7 @@
                 break;
             default:
                 // should never happen
-                console.log("ERROR: addElement() got name " + name + ", which isn't recognized as a shape");
+                console.debug("ERROR: addElement() got name " + name + ", which isn't recognized as a shape");
                 break;
         }
         
@@ -274,7 +274,7 @@
     // Called whenever an Asset is added or whenever the screen is resized.
     function run_simulation() {
         nodes = [];
-        links = [];
+        // links = [];
 
         // Builds a nodes list based on how many existing Assets there are
         for (let i = 0; i < node_count; i++) {
@@ -299,23 +299,24 @@
         // updates to links done by addDataFlow().
         // But for some reason, these links work, but the addDataFlow() ones don't?
         // TODO figure out why and fix it
-        for (let i = 0; i < node_count; i++) {
-            for (let j = 0; j < node_count; j++) {
-                if (i != j) {
-                    links.push({
-                        'source': i,
-                        'target': j,
-                        'type': "Test -->",
-                        'distance': 30
-                    })
-                }
-            }
-        }
+        // for (let i = 0; i < node_count; i++) {
+        //     for (let j = 0; j < node_count; j++) {
+        //         if (i != j) {
+        //             links.push({
+        //                 'source': i,
+        //                 'target': j,
+        //                 'type': "Test -->",
+        //                 'distance': 30
+        //             })
+        //         }
+        //     }
+        // }
         
         // DEBUG: Log the links list.
         console.log(links);
         
         const svg = d3.select(document.getElementById("dfd")).select("svg");
+
         const link = svg.selectAll(".links")
         .data(links)
         .enter()
@@ -338,7 +339,8 @@
         .force('y', d3.forceY(area.height / 2))
         .force('link', d3.forceLink(links))
         .force('collide', d3.forceCollide().radius(100))
-            .on('tick', ticked);
+        .on('tick', ticked)
+        .alpha(1.0).restart();
     }
 
     // Clears the dropdown lists, then regenerates them
@@ -346,8 +348,6 @@
     function update_dropdowns() {
         let select_source = document.getElementById('source_dropdown');
         let select_target = document.getElementById('target_dropdown');
-        select_source.disabled = false;
-        select_target.disabled = false;
 
         while (select_source.options.length > 0) {
             select_source.remove(0);
@@ -355,16 +355,23 @@
         }
         
         const svg = d3.select(document.getElementById("dfd")).select("svg");
-        svg.selectAll('.asset_text').each(function (d, i) {
+        svg.selectAll('g').each(function (d, i) {
             select_source.add(new Option(
-                d3.select(this).text(),
-                d3.select(this.parentNode).data()[0].id
+                d3.select(this).select(".asset_text").text(),
+                d.id
             ));
             select_target.add(new Option(
-                d3.select(this).text(),
-                d3.select(this.parentNode).data()[0].id
+                d3.select(this).select(".asset_text").text(),
+                d.id
             ));
         })
+
+        select_source.disabled = false;
+        // select_source.value = "0";
+        select_source.selectedIndex = 0;
+        select_target.disabled = false;
+        // select_target.value = (select_target.options.length > 1 ? "1" : "0");
+        select_target.selectedIndex = (select_target.options.length > 1 ? 1 : 0);
     }
     
     // Tells elements how to move on each frame of the forceSimulation
@@ -372,23 +379,15 @@
         const svg = d3.select(document.getElementById("dfd")).select("svg");
         let link = svg.selectAll(".links")
         let edgepaths = svg.selectAll(".edgepath")
-        // Pasted code from online
-        // Please work? :pray:
+
         link.attr("x1", d => d.source.x)
         .attr("y1", d => d.source.y)
         .attr("x2", d => d.target.x)
         .attr("y2", d => d.target.y);
-
-        // Even more pasted code from online
-        // Please work???? :pray:
         
-        var u = d3.select('svg')
+        d3.select('svg')
         .selectAll('g')
-        .data(nodes); // NOTE: something weird about how this data() call might be
-        // overwriting the datum() call we're trying to use to show which element(s)
-        // are selected. why is this happening???
-
-        u.attr("transform", function(d) {
+        .attr("transform", function(d) {
             return "translate("+[
                 d.x,
                 d.y
@@ -419,6 +418,10 @@
             'distance': 30
         }
 
+        // DEBUG
+        console.log("generating link from " + source + " to " + target)
+
         links.push(link); // FIXME: D3 does not like this
+        run_simulation();
     }
 </script>
